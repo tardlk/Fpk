@@ -65,6 +65,16 @@ scripts/
 - **启停**：`cmd/main` 按官方约定实现 `start`/`stop`/`status`（运行返回 0，未运行返回 3）。
 - **不做的非官方行为**：不修改 FPK 格式、不写入自定义 `checksum`、不使用 `port-config`/`systemd-unit` 等未公开字段。
 
+## GitHub Actions 自动构建
+
+`.github/workflows/build.yml` 负责在云端用官方 `fnpack` 构建并发布：
+
+- **手动触发**：可选择架构（`both` / `x86` / `arm`）和指定 Emby 版本。
+- **push 到 main**：当 `embyserver/`、`src/`、`scripts/` 或工作流本身变化时重建。
+- **定时任务**：每天 `20:00 UTC` 检查 Emby 新版本；该版本已发布则跳过。
+
+流程：下载官方 fnpack → 下载 Emby `.deb` → 组装 `embyserver/` → `fnpack build` → 把 `embyserver_<version>_<arch>.fpk` 上传为工作流产物并发布到 Release（标签 `emby-v<version>`）。
+
 ## 更新版本
 
 ```bash
