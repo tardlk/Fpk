@@ -109,7 +109,7 @@ if [ -z "${VERSION}" ]; then
         sed -n 's/.*"tag_name":[[:space:]]*"\([^"]*\)".*/\1/p' | head -1)"
 else
     info "Looking up qbittorrent-nox-static release for ${VERSION} ..."
-    TAG="$(api_get "${RELEASES_API}/releases?per_page=100" | python3 -c '
+    TAG="$(api_get "${RELEASES_API}?per_page=100" | python3 -c '
 import json, sys
 version = sys.argv[1]
 data = json.load(sys.stdin)
