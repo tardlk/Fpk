@@ -1,0 +1,10 @@
+#!/bin/bash
+
+# Runs after an upgrade. Configuration under TRIM_PKGVAR is kept as-is;
+# restore ownership in case the lifecycle scripts ran as root.
+if [ -n "${TRIM_USERNAME}" ] && [ -d "${TRIM_PKGVAR}/qBittorrent" ]; then
+    chown -R "${TRIM_USERNAME}:${TRIM_GROUPNAME:-${TRIM_USERNAME}}" \
+        "${TRIM_PKGVAR}/qBittorrent" 2>/dev/null || true
+fi
+
+exit 0

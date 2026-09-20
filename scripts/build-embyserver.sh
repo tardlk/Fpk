@@ -14,11 +14,11 @@ set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 APP_DIR="${REPO_ROOT}/embyserver"
-SRC_DIR="${REPO_ROOT}/src/app"
+SRC_DIR="${REPO_ROOT}/src/embyserver/app"
 DIST_DIR="${REPO_ROOT}/dist"
 WORK_DIR="${REPO_ROOT}/build"
 FNPACK="${REPO_ROOT}/fnpack"
-RELEASES_API="${EMBY_RELEASES_API:-https://api.github.com/repos/MediaBrowser/Emby.Releases}"
+RELEASES_API="${EMBY_RELEASES_API:-https://api.github.com/repos/MediaBrowser/Emby.Releases/releases}"
 
 info() { echo "==> $1"; }
 warn() { echo "WARNING: $1" >&2; }

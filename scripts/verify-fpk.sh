@@ -10,7 +10,10 @@
 #   - cmd/* and app/ui are executable / valid JSON
 #   - every ELF binary in app.tgz matches the target architecture
 #
-# Usage: scripts/verify-fpk.sh <fpk-path> <x86|arm>
+# Usage: scripts/verify-fpk.sh <fpk-path> <x86|arm> [required-payload-path ...]
+#
+# Extra arguments are payload paths (relative to app.tgz) that must exist,
+# e.g. bin/emby-server or bin/qbittorrent-nox.
 
 set -euo pipefail
 
@@ -18,9 +21,13 @@ FPK="${1:-}"
 PLATFORM="${2:-}"
 
 if [ -z "${FPK}" ] || [ -z "${PLATFORM}" ]; then
-    echo "Usage: $0 <fpk-path> <x86|arm>" >&2
+    echo "Usage: $0 <fpk-path> <x86|arm> [required-payload-path ...]" >&2
     exit 2
 fi
+
+shift 2
+PAYLOAD_REQUIRED=(ui/config ui/images/icon_64.png ui/images/icon_256.png)
+PAYLOAD_EXEC=("$@")
 [ -f "${FPK}" ] || {
     echo "fpk not found: ${FPK}" >&2
     exit 1
@@ -147,22 +154,24 @@ else
     fail "app.tgz extraction failed"
 fi
 
-for entry in ui/config ui/images/icon_64.png ui/images/icon_256.png bin/emby-server; do
+for entry in "${PAYLOAD_REQUIRED[@]}"; do
     if [ -e "${WORK}/${entry}" ]; then
         pass "payload contains ${entry}"
     else
         fail "payload is missing ${entry}"
     fi
 done
+for entry in ${PAYLOAD_EXEC[@]+"${PAYLOAD_EXEC[@]}"}; do
+    if [ -x "${WORK}/${entry}" ]; then
+        pass "payload contains executable ${entry}"
+    else
+        fail "payload is missing executable ${entry}"
+    fi
+done
 if json_ok "${WORK}/ui/config"; then
     pass "ui/config is valid JSON"
 else
     fail "ui/config is not valid JSON"
-fi
-if [ -x "${WORK}/bin/emby-server" ]; then
-    pass "bin/emby-server is executable"
-else
-    fail "bin/emby-server is not executable"
 fi
 
 # 9. ELF architecture (scan only binary-bearing directories)

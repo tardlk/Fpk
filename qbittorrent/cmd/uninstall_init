@@ -1,0 +1,7 @@
+#!/bin/bash
+
+# Runs before uninstall: make sure qBittorrent is not running.
+
+"$(dirname "$0")/main" stop >/dev/null 2>&1 || true
+
+exit 0

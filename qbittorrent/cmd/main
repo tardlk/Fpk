@@ -1,0 +1,123 @@
+#!/bin/bash
+
+# qBittorrent lifecycle: start / stop / status.
+# All paths come from the fnOS runtime environment (TRIM_* variables).
+
+APP_DIR="${TRIM_APPDEST}"
+PORT="${TRIM_SERVICE_PORT:-8085}"
+LOG_FILE="${TRIM_PKGVAR}/service.log"
+PID_FILE="${TRIM_PKGVAR}/qbittorrent.pid"
+CMD="${APP_DIR}/bin/qbittorrent-nox"
+
+log_msg() {
+    echo "$(date '+%Y-%m-%d %H:%M:%S') - $1" >> "${LOG_FILE}"
+}
+
+check_process() {
+    kill -0 "$1" 2>/dev/null
+}
+
+status() {
+    if [ -f "${PID_FILE}" ]; then
+        local pid
+        pid=$(head -n 1 "${PID_FILE}" | tr -d '[:space:]')
+        if [ -n "${pid}" ] && check_process "${pid}"; then
+            return 0
+        fi
+        rm -f "${PID_FILE}"
+    fi
+
+    return 1
+}
+
+# Wait until the Web UI listens, or the process dies. qBittorrent can take a
+# while on first start, so allow up to ~30s; return 0 when ready or when the
+# start is merely slow.
+wait_ready() {
+    local pid=$1
+    local count=0
+
+    while [ "${count}" -lt 30 ]; do
+        if ! check_process "${pid}"; then
+            return 1
+        fi
+
+        if (exec 3<>"/dev/tcp/127.0.0.1/${PORT}") 2>/dev/null; then
+            exec 3>&- 3<&- 2>/dev/null || true
+            return 0
+        fi
+
+        sleep 1
+        count=$((count + 1))
+    done
+
+    return 0
+}
+
+start_process() {
+    if status; then
+        log_msg "qBittorrent is already running"
+        return 0
+    fi
+
+    log_msg "Starting qBittorrent ..."
+    "${CMD}" --profile="${TRIM_PKGVAR}" --webui-port="${PORT}" >> "${LOG_FILE}" 2>&1 &
+    local pid=$!
+    echo "${pid}" > "${PID_FILE}"
+
+    if wait_ready "${pid}"; then
+        log_msg "qBittorrent started (pid ${pid})"
+        return 0
+    fi
+
+    log_msg "qBittorrent failed to start, check ${LOG_FILE}"
+    rm -f "${PID_FILE}"
+    return 1
+}
+
+stop_process() {
+    log_msg "Stopping qBittorrent ..."
+
+    if [ -r "${PID_FILE}" ]; then
+        local pid
+        pid=$(head -n 1 "${PID_FILE}" | tr -d '[:space:]')
+        if [ -n "${pid}" ] && check_process "${pid}"; then
+            kill -TERM "${pid}" >> "${LOG_FILE}" 2>&1
+
+            local count=0
+            while check_process "${pid}" && [ "${count}" -lt 20 ]; do
+                sleep 1
+                count=$((count + 1))
+            done
+
+            if check_process "${pid}"; then
+                kill -KILL "${pid}" >> "${LOG_FILE}" 2>&1
+            fi
+        fi
+        rm -f "${PID_FILE}"
+    fi
+
+    # Fallback in case the PID file was lost or stale.
+    pkill -u "${TRIM_USERNAME}" -x qbittorrent-nox 2>/dev/null || true
+
+    return 0
+}
+
+case "$1" in
+start)
+    start_process
+    ;;
+stop)
+    stop_process
+    ;;
+status)
+    if status; then
+        exit 0
+    else
+        exit 3
+    fi
+    ;;
+*)
+    exit 1
+    ;;
+esac

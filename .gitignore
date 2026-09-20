@@ -5,10 +5,11 @@
 /build/
 /dist/
 
-# Assembled application payload inside the fnpack project.
-# It is rebuilt from the upstream Emby .deb plus the src/app overlay by
-# scripts/build.sh and must not be committed.
+# Assembled application payload inside the fnpack projects.
+# They are rebuilt from upstream artifacts plus the src/<app>/app overlays by
+# scripts/build-<app>.sh and must not be committed.
 /embyserver/app/
+/qbittorrent/app/
 
 *.deb
 *.fpk

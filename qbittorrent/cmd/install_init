@@ -1,0 +1,5 @@
+#!/bin/bash
+
+# Runs before the application files are installed.
+
+exit 0

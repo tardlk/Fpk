@@ -1,0 +1,7 @@
+#!/bin/bash
+
+# Runs before an upgrade: stop the running service so files can be replaced.
+
+"$(dirname "$0")/main" stop >/dev/null 2>&1 || true
+
+exit 0

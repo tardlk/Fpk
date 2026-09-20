@@ -1,0 +1,14 @@
+appname               = qbittorrent
+version               = 5.2.3
+display_name          = qBittorrent
+desc                  = qBittorrent 是一款轻量级 BitTorrent 客户端，功能强大且易于使用。默认账号 admin，默认密码 adminadmin，登录后请立即修改密码。Web 界面：http://<NAS-IP>:8085
+platform              = arm
+source                = thirdparty
+maintainer            = qBittorrent / userdocs
+maintainer_url        = https://github.com/userdocs/qbittorrent-nox-static
+desktop_uidir         = ui
+desktop_applaunchname = qbittorrent.Application
+service_port          = 8085
+checkport             = true
+ctl_stop              = true
+changelog             = 首次发布：基于官方 qbittorrent-nox-static 构建，预设账号 admin/adminadmin，下载目录位于 qbittorrent 共享目录。

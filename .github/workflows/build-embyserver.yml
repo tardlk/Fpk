@@ -1,0 +1,173 @@
+name: Build Emby FPK
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Emby version (leave empty for latest stable)"
+        required: false
+        type: string
+        default: ""
+      arch:
+        description: "Target architecture"
+        required: true
+        type: choice
+        default: "both"
+        options:
+          - both
+          - x86
+          - arm
+  push:
+    branches: [main]
+    paths:
+      - "embyserver/**"
+      - "src/**"
+      - "scripts/**"
+      - ".github/workflows/build-embyserver.yml"
+  schedule:
+    - cron: "0 20 * * *"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: build-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      tag: ${{ steps.version.outputs.tag }}
+      should_build: ${{ steps.check.outputs.should_build }}
+      matrix: ${{ steps.matrix.outputs.matrix }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Resolve version
+        id: version
+        env:
+          INPUT_VERSION: ${{ inputs.version }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          VERSION="$INPUT_VERSION"
+          if [ -z "$VERSION" ]; then
+            AUTH=()
+            [ -n "${GITHUB_TOKEN:-}" ] && AUTH=(-H "Authorization: Bearer ${GITHUB_TOKEN}")
+            VERSION=$(curl -fsSL ${AUTH[@]+"${AUTH[@]}"} \
+              -H "Accept: application/vnd.github+json" \
+              "https://api.github.com/repos/MediaBrowser/Emby.Releases/releases/latest" \
+              | sed -n 's/.*"tag_name":[[:space:]]*"\([^"]*\)".*/\1/p' | head -1)
+          fi
+          [ -n "$VERSION" ] || { echo "::error::Failed to resolve Emby version"; exit 1; }
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "tag=emby-v$VERSION" >> "$GITHUB_OUTPUT"
+          echo "Resolved Emby version: $VERSION"
+
+      - name: Decide whether to build
+        id: check
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          EVENT: ${{ github.event_name }}
+          TAG: ${{ steps.version.outputs.tag }}
+        run: |
+          # Manual runs and code pushes always rebuild; scheduled runs only
+          # build when this Emby version has not been released yet.
+          if [ "$EVENT" = "schedule" ] && gh release view "$TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            echo "should_build=false" >> "$GITHUB_OUTPUT"
+            echo "Release $TAG already exists; skipping scheduled build"
+          else
+            echo "should_build=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Compute arch matrix
+        id: matrix
+        env:
+          INPUT_ARCH: ${{ inputs.arch }}
+        run: |
+          case "${INPUT_ARCH:-both}" in
+            x86)  MATRIX='["x86"]' ;;
+            arm)  MATRIX='["arm"]' ;;
+            *)    MATRIX='["x86","arm"]' ;;
+          esac
+          echo "matrix=$MATRIX" >> "$GITHUB_OUTPUT"
+          echo "Build matrix: $MATRIX"
+
+  build:
+    needs: prepare
+    if: needs.prepare.outputs.should_build == 'true'
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        arch: ${{ fromJson(needs.prepare.outputs.matrix) }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Ensure scripts are executable
+        run: chmod +x scripts/*.sh embyserver/cmd/* src/embyserver/app/bin/emby-server
+
+      - name: Fetch official fnpack
+        run: ./scripts/fetch-fnpack.sh
+
+      - name: Build FPK
+        env:
+          VERSION: ${{ needs.prepare.outputs.version }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          ./scripts/build-embyserver.sh --arch "${{ matrix.arch }}" --version "$VERSION"
+
+      - name: Verify FPK contract
+        run: |
+          command -v file >/dev/null 2>&1 || sudo apt-get install -y file
+          ./scripts/verify-fpk.sh dist/embyserver.fpk "${{ matrix.arch }}" bin/emby-server
+
+      - name: Rename artifact with version and arch
+        env:
+          VERSION: ${{ needs.prepare.outputs.version }}
+        run: |
+          mv dist/embyserver.fpk "dist/embyserver_${VERSION}_${{ matrix.arch }}.fpk"
+          ls -lh dist/
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: fpk-${{ matrix.arch }}
+          path: dist/*.fpk
+          if-no-files-found: error
+          retention-days: 7
+
+  release:
+    needs: [prepare, build]
+    if: needs.prepare.outputs.should_build == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: fpk-*
+          path: artifacts
+          merge-multiple: true
+
+      - name: Publish release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ needs.prepare.outputs.tag }}
+          VERSION: ${{ needs.prepare.outputs.version }}
+        run: |
+          if ! gh release view "$TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            gh release create "$TAG" \
+              --repo "$GITHUB_REPOSITORY" \
+              --title "Emby ${VERSION} for fnOS" \
+              --notes "由 GitHub Actions 使用官方 fnpack 构建的 Emby ${VERSION} 安装包。
+
+          - 架构: x86 / arm
+          - 安装后访问: http://<NAS-IP>:8096
+          - 安装方式: fnOS 应用中心 → 手动安装"
+          fi
+          gh release upload "$TAG" artifacts/*.fpk --repo "$GITHUB_REPOSITORY" --clobber
+          echo "Uploaded assets:"
+          gh release view "$TAG" --repo "$GITHUB_REPOSITORY" --json assets -q '.assets[].name'

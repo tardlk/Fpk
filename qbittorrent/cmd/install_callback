@@ -1,0 +1,29 @@
+#!/bin/bash
+
+# Runs after the application files are installed.
+# Seeds a default qBittorrent configuration (Web UI credentials + paths) so the
+# first start does not generate a random temporary password.
+
+CONF_DIR="${TRIM_PKGVAR}/qBittorrent/config"
+CONF="${CONF_DIR}/qBittorrent.conf"
+SHARE_DIR="${TRIM_DATA_SHARE_PATHS%%:*}"
+[ -n "${SHARE_DIR}" ] || SHARE_DIR="${TRIM_PKGVAR}"
+PORT="${TRIM_SERVICE_PORT:-8085}"
+
+mkdir -p "${CONF_DIR}" "${TRIM_PKGVAR}/logs" "${SHARE_DIR}/Download" "${SHARE_DIR}/temp" 2>/dev/null || true
+
+if [ ! -f "${CONF}" ] && [ -f "${TRIM_APPDEST}/defaults/qBittorrent.conf.tpl" ]; then
+    sed -e "s|__LOG_DIR__|${TRIM_PKGVAR}/logs|g" \
+        -e "s|__SHARE_DIR__|${SHARE_DIR}|g" \
+        -e "s|__PORT__|${PORT}|g" \
+        "${TRIM_APPDEST}/defaults/qBittorrent.conf.tpl" > "${CONF}"
+fi
+
+# The lifecycle scripts may run as root; make sure the app user can write its
+# own configuration and logs.
+if [ -n "${TRIM_USERNAME}" ]; then
+    chown -R "${TRIM_USERNAME}:${TRIM_GROUPNAME:-${TRIM_USERNAME}}" \
+        "${TRIM_PKGVAR}/qBittorrent" "${TRIM_PKGVAR}/logs" 2>/dev/null || true
+fi
+
+exit 0
