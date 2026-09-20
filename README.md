@@ -84,6 +84,7 @@ Emby 以专用应用用户 `embyserver` 运行（不是你的 NAS 登录用户�
 - **数据**：Emby 的运行数据保存在 `TRIM_PKGVAR`；`config/resource` 声明 `embyserver` 共享目录，作为默认媒体库目录。
 - **入口**：`app/ui/config` 使用端口入口（`service_port=8096`）。
 - **启停**：`cmd/main` 按官方约定实现 `start`/`stop`/`status`（运行返回 0，未运行返回 3）。
+- **重启自愈**：`app/bin/emby-server` 作为 Emby 的 supervisor。Emby 在插件更新等场景下会以退出码 `3`（`restartexitcode`）请求重启，期望由服务管理器拉起；fnOS 不托管应用进程，因此由启动器自动重启，并转发 `TERM/INT` 保证 `cmd/main stop` 仍能优雅停止。
 - **不做的非官方行为**：不修改 FPK 格式、不写入自定义 `checksum`、不使用 `port-config`/`systemd-unit` 等未公开字段。
 
 ## GitHub Actions 自动构建

@@ -10,8 +10,15 @@
 #
 # The self-update flag of the upstream launcher is intentionally omitted:
 # application updates are managed by the fnOS App Center.
+#
+# Emby asks for a restart by exiting with -restartexitcode (3); upstream relies
+# on systemd to start it again. fnOS does not supervise application processes,
+# so this wrapper acts as the supervisor: it restarts Emby when it exits with
+# that code (for example after a plugin update) and forwards TERM/INT so
+# `cmd/main stop` still stops the service gracefully. Without this, a plugin
+# update would take the server down until it is started manually.
 
-set -e
+set -u
 
 APP_DIR="${TRIM_APPDEST:-/var/apps/embyserver/target}"
 APP_DATA_DIR="${TRIM_PKGVAR:-${APP_DIR}/var}"
@@ -41,12 +48,46 @@ export OverrideGpuAddressSpace=48
 
 cd "${APP_DIR}" || exit 1
 
-exec "${APP_DIR}/system/EmbyServer" \
-    -programdata "${APP_DATA_DIR}" \
-    -ffdetect "${APP_DIR}/bin/ffdetect" \
-    -ffmpeg "${APP_DIR}/bin/ffmpeg" \
-    -ffprobe "${APP_DIR}/bin/ffprobe" \
-    -restartexitcode 3 \
-    -nolocalportconfig \
-    -ignore_vaapi_enabled_flag \
-    -defaultdirectory "${SHARE_DIR}"
+RESTART_EXIT_CODE=3
+STOPPING=0
+EMBY_PID=""
+
+forward_term() {
+    STOPPING=1
+    if [ -n "${EMBY_PID}" ]; then
+        kill -TERM "${EMBY_PID}" 2>/dev/null
+    fi
+}
+
+trap forward_term TERM INT
+
+while :; do
+    "${APP_DIR}/system/EmbyServer" \
+        -programdata "${APP_DATA_DIR}" \
+        -ffdetect "${APP_DIR}/bin/ffdetect" \
+        -ffmpeg "${APP_DIR}/bin/ffmpeg" \
+        -ffprobe "${APP_DIR}/bin/ffprobe" \
+        -restartexitcode "${RESTART_EXIT_CODE}" \
+        -nolocalportconfig \
+        -ignore_vaapi_enabled_flag \
+        -defaultdirectory "${SHARE_DIR}" &
+    EMBY_PID=$!
+
+    wait "${EMBY_PID}"
+    rc=$?
+    child_pid="${EMBY_PID}"
+    EMBY_PID=""
+
+    if [ "${STOPPING}" -eq 1 ]; then
+        # TERM/INT was forwarded; wait for the child to finish shutting down.
+        wait "${child_pid}" 2>/dev/null
+        exit 0
+    fi
+
+    if [ "${rc}" -eq "${RESTART_EXIT_CODE}" ]; then
+        sleep 2
+        continue
+    fi
+
+    exit "${rc}"
+done

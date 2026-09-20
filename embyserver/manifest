@@ -11,4 +11,4 @@ desktop_applaunchname = embyserver.Application
 service_port          = 8096
 checkport             = true
 ctl_stop              = true
-changelog             = 新增使用提示：需先在 fnOS 应用设置中为本应用授权媒体目录；在 Emby 中添加媒体库时，请手动输入完整路径（如 /vol1/1000/Media），不要使用「浏览文件夹」。
+changelog             = 1. 修复 Emby 在插件更新后需要重启时退出后不再启动的问题：启动器现在作为 supervisor，在 Emby 以退出码 3 请求重启时自动拉起（并转发 TERM 以支持优雅停止）。2. 使用提示：需先在 fnOS 应用设置中授权媒体目录；添加媒体库时请手动输入完整路径（如 /vol1/1000/Media），不要使用「浏览文件夹」。
