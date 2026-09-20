@@ -50,10 +50,15 @@ jobs:
         id: version
         env:
           INPUT_VERSION: ${{ inputs.version }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           VERSION="$INPUT_VERSION"
           if [ -z "$VERSION" ]; then
-            VERSION=$(curl -fsSL "https://api.github.com/repos/MediaBrowser/Emby.Releases/releases/latest" \
+            AUTH=()
+            [ -n "${GITHUB_TOKEN:-}" ] && AUTH=(-H "Authorization: Bearer ${GITHUB_TOKEN}")
+            VERSION=$(curl -fsSL ${AUTH[@]+"${AUTH[@]}"} \
+              -H "Accept: application/vnd.github+json" \
+              "https://api.github.com/repos/MediaBrowser/Emby.Releases/releases/latest" \
               | sed -n 's/.*"tag_name":[[:space:]]*"\([^"]*\)".*/\1/p' | head -1)
           fi
           [ -n "$VERSION" ] || { echo "::error::Failed to resolve Emby version"; exit 1; }
@@ -102,14 +107,23 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Ensure scripts are executable
+        run: chmod +x scripts/*.sh embyserver/cmd/* src/app/bin/emby-server
+
       - name: Fetch official fnpack
         run: ./scripts/fetch-fnpack.sh
 
       - name: Build FPK
         env:
           VERSION: ${{ needs.prepare.outputs.version }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           ./scripts/build.sh --arch "${{ matrix.arch }}" --version "$VERSION"
+
+      - name: Verify FPK contract
+        run: |
+          command -v file >/dev/null 2>&1 || sudo apt-get install -y file
+          ./scripts/verify-fpk.sh dist/embyserver.fpk "${{ matrix.arch }}"
 
       - name: Rename artifact with version and arch
         env:

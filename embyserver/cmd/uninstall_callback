@@ -4,13 +4,16 @@
 # wizard/uninstall exposes wizard_delete_data so users can choose
 # whether their Emby configuration and metadata are removed.
 
+clean_dir() {
+    local dir="$1"
+    if [ -n "${dir}" ] && [ -d "${dir}" ]; then
+        find "${dir}" -mindepth 1 -delete 2>/dev/null || true
+    fi
+}
+
 if [ "${wizard_delete_data}" = "true" ]; then
-    if [ -n "${TRIM_PKGVAR}" ] && [ -d "${TRIM_PKGVAR}" ]; then
-        rm -rf "${TRIM_PKGVAR:?}/"* "${TRIM_PKGVAR:?}/".[!.]* 2>/dev/null || true
-    fi
-    if [ -n "${TRIM_PKGHOME}" ] && [ -d "${TRIM_PKGHOME}" ]; then
-        rm -rf "${TRIM_PKGHOME:?}/"* "${TRIM_PKGHOME:?}/".[!.]* 2>/dev/null || true
-    fi
+    clean_dir "${TRIM_PKGVAR:-}"
+    clean_dir "${TRIM_PKGHOME:-}"
 fi
 
 exit 0

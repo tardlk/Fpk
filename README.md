@@ -73,7 +73,13 @@ scripts/
 - **push 到 main**：当 `embyserver/`、`src/`、`scripts/` 或工作流本身变化时重建。
 - **定时任务**：每天 `20:00 UTC` 检查 Emby 新版本；该版本已发布则跳过。
 
-流程：下载官方 fnpack → 下载 Emby `.deb` → 组装 `embyserver/` → `fnpack build` → 把 `embyserver_<version>_<arch>.fpk` 上传为工作流产物并发布到 Release（标签 `emby-v<version>`）。
+流程：下载官方 fnpack → 下载 Emby `.deb` → 组装 `embyserver/` → `fnpack build` → **`scripts/verify-fpk.sh` 校验** → 把 `embyserver_<version>_<arch>.fpk` 上传为工作流产物并发布到 Release（标签 `emby-v<version>`）。
+
+## 校验与供应链
+
+- `scripts/fetch-fnpack.sh`：按已知 **SHA-256** 校验官方 fnpack 1.2.3（`linux-amd64` / `darwin-amd64` / `darwin-arm64`）。官方当前未发布 `linux-arm64` 版，脚本会明确报错。
+- `scripts/build.sh`：从 GitHub Release 元数据读取 Emby `.deb` 的 **sha256 digest** 并校验下载文件；无 digest 时至少打印实际 sha256。
+- `scripts/verify-fpk.sh`：打包后校验 FPK 结构、必含项、manifest 字段、`checksum == md5(app.tgz)`、脚本可执行位、JSON 合法性，以及 **所有 ELF 架构与目标平台一致**。
 
 ## 更新版本
 

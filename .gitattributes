@@ -1,0 +1,15 @@
+# Normalize all text files to LF in the repository and in working trees.
+# This project is edited on Windows via WSL too, so CRLF must never leak into
+# shell scripts: a CRLF shebang ("/bin/bash^M") breaks every cmd/* script on
+# fnOS.
+* text=auto eol=lf
+
+# Lifecycle scripts and launchers must stay LF.
+embyserver/cmd/* text eol=lf
+scripts/* text eol=lf
+src/app/bin/* text eol=lf
+
+# Binary assets.
+*.png binary
+*.PNG binary
+*.ico binary

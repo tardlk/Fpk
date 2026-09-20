@@ -96,8 +96,8 @@ stop_process() {
         rm -f "${PID_FILE}"
     fi
 
-    # Clean up any leftover transcoding children.
-    pkill -x EmbyServer 2>/dev/null || true
+    # Clean up any leftover transcoding children, limited to this app's user.
+    pkill -u "${TRIM_USERNAME}" -x EmbyServer 2>/dev/null || true
 
     return 0
 }
