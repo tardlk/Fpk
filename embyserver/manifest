@@ -1,7 +1,7 @@
 appname               = embyserver
 version               = 4.10.0.40
 display_name          = Emby
-desc                  = Emby 是一款开源的媒体服务器，可在多种设备上管理和串流你的影音资料库。
+desc                  = Emby 是一款开源的媒体服务器，可在多种设备上管理和串流你的影音资料库。使用前请先在 fnOS「应用设置」中为本应用授权需要访问的共享文件夹（媒体目录）；在 Emby 中添加媒体库时，请勿使用「浏览文件夹」，而是手动输入完整路径，例如 /vol1/1000/Media。共享文件夹完整路径格式为 /vol{N}/{uid}/{共享文件夹名}，可用 SSH 执行 find /vol* -maxdepth 2 -name 目录名 查找。
 platform              = x86
 source                = thirdparty
 maintainer            = Emby LLC
@@ -11,3 +11,4 @@ desktop_applaunchname = embyserver.Application
 service_port          = 8096
 checkport             = true
 ctl_stop              = true
+changelog             = 新增使用提示：需先在 fnOS 应用设置中为本应用授权媒体目录；在 Emby 中添加媒体库时，请手动输入完整路径（如 /vol1/1000/Media），不要使用「浏览文件夹」。

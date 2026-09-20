@@ -19,7 +19,7 @@ embyserver/                   # 官方 fnpack 项目（fnpack create 生成）
 ├── ICON.PNG / ICON_256.PNG   # 包图标（取自 Emby 官方图标）
 ├── config/{privilege,resource}
 ├── cmd/                      # 生命周期脚本
-├── wizard/uninstall          # 卸载向导（是否删除数据）
+├── wizard/{install,uninstall} # 安装提示 / 卸载向导（是否删除数据）
 └── app/                      # 运行文件（由构建脚本生成，不提交）
 
 scripts/
@@ -31,7 +31,7 @@ scripts/
 
 1. 用 `curl` 下载 Emby 官方 `.deb`（`MediaBrowser/Emby.Releases`）。
 2. `ar -x` + `tar -xf data.tar.xz` 解包，取出 `opt/emby-server`。
-3. 把 `bin etc ex lib licenses share system` 放入 `embyserver/app/`（即安装后的 `target/`）。
+3. 把 `bin etc extra lib licenses share system` 放入 `embyserver/app/`（即安装后的 `target/`）。
 4. 用 `src/app/` 覆盖 fnOS 专属文件（启动器、入口配置、图标）。
 5. 改写 `manifest` 的 `version` / `platform`。
 6. 运行官方 `fnpack build` 生成 `.fpk`。
@@ -54,6 +54,27 @@ scripts/
 
 安装到 fnOS：应用中心 → 手动安装，选择该 `.fpk`；或使用 `appcenter-cli install-fpk`。
 安装后通过 `http://<NAS-IP>:8096` 或桌面 Emby 图标访问。
+
+## 媒体库路径与授权
+
+Emby 以专用应用用户 `embyserver` 运行（不是你的 NAS 登录用户），而 fnOS 卷目录（`/vol1`、`/vol2` 等）对应用用户没有“列目录”权限。因此：
+
+1. **先授权目录**：在 fnOS「应用设置 → 授权目录」中，把要作为媒体库的共享文件夹授权给 Emby。
+2. **添加媒体库时手动输入完整路径**：在 Emby 中添加媒体库时，**不要点击「浏览文件夹」**（浏览会因权限被拒，报 `Access to the path '/vol1/@appshare' is denied.`），而是直接填写完整路径，例如：
+
+   ```
+   /vol1/1000/Media
+   ```
+
+3. **路径格式**为 `/vol{N}/{uid}/{共享文件夹名}`，其中 `{N}` 是卷号、`{uid}` 是用户 ID 目录（通常为 `1000`）。可用 SSH 查找真实路径：
+
+   ```bash
+   find /vol* -maxdepth 2 -name "你的共享文件夹名"
+   ```
+
+> 说明：这是 fnOS 的权限模型导致的（应用用户可“穿越”路径但无“列目录”权限），并非本包缺陷；社区同类包（如 Plex）也采用“手动输入完整路径”的方式。fnOS 的原生目录选择器需要应用声明 `micro_app=true` 并使用开放 API，不适用于 Emby 自带的管理界面。
+
+上述提示同样写在 `manifest` 的应用描述与应用安装向导（`wizard/install`）中。
 
 ## 设计说明（对齐官方文档）
 
