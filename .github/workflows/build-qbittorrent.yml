@@ -168,7 +168,8 @@ jobs:
 
           - 架构: x86 / arm
           - 默认账号: admin / adminadmin（请登录后立即修改）
-          - 访问地址: http://<NAS-IP>:8085
+          - WebUI: http://<NAS-IP>:58085
+          - BT 监听（上传/下载）端口: 58080
           - 安装方式: fnOS 应用中心 → 手动安装"
           fi
           gh release upload "$TAG" artifacts/*.fpk --repo "$GITHUB_REPOSITORY" --clobber

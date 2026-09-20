@@ -4,7 +4,7 @@
 # All paths come from the fnOS runtime environment (TRIM_* variables).
 
 APP_DIR="${TRIM_APPDEST}"
-PORT="${TRIM_SERVICE_PORT:-8085}"
+PORT="${TRIM_SERVICE_PORT:-58085}"
 LOG_FILE="${TRIM_PKGVAR}/service.log"
 PID_FILE="${TRIM_PKGVAR}/qbittorrent.pid"
 CMD="${APP_DIR}/bin/qbittorrent-nox"

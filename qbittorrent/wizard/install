@@ -4,7 +4,7 @@
     "items": [
       {
         "type": "tips",
-        "helpText": "默认账号：admin，默认密码：adminadmin。安装后请通过 http://<NAS-IP>:8085 登录并立即修改密码。下载目录默认为 qbittorrent 共享目录下的 Download。"
+        "helpText": "默认账号：admin，默认密码：adminadmin。安装后请通过 http://<NAS-IP>:58085 登录并立即修改密码。Web 界面端口 58085，BT 监听（上传/下载）端口 58080。下载目录默认为 qbittorrent 共享目录下的 Download。"
       }
     ]
   }

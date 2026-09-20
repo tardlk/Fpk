@@ -10,6 +10,8 @@ Session\DefaultSavePath=__SHARE_DIR__/Download
 Session\TempPath=__SHARE_DIR__/temp
 Session\TempPathEnabled=false
 Session\QueueingSystemEnabled=false
+Session\Port=58080
+Session\UseRandomPort=false
 
 [Preferences]
 General\Locale=zh_CN

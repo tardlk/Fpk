@@ -8,7 +8,7 @@ CONF_DIR="${TRIM_PKGVAR}/qBittorrent/config"
 CONF="${CONF_DIR}/qBittorrent.conf"
 SHARE_DIR="${TRIM_DATA_SHARE_PATHS%%:*}"
 [ -n "${SHARE_DIR}" ] || SHARE_DIR="${TRIM_PKGVAR}"
-PORT="${TRIM_SERVICE_PORT:-8085}"
+PORT="${TRIM_SERVICE_PORT:-58085}"
 
 mkdir -p "${CONF_DIR}" "${TRIM_PKGVAR}/logs" "${SHARE_DIR}/Download" "${SHARE_DIR}/temp" 2>/dev/null || true
 

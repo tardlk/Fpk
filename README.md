@@ -10,9 +10,11 @@
 | 应用 | `appname` | 访问端口 | 默认账号 | Release 标签 |
 | --- | --- | --- | --- | --- |
 | Emby Server | `embyserver` | 8096 | — | `emby-v*` |
-| qBittorrent | `qbittorrent` | 8085 | `admin` / `adminadmin` | `qbittorrent-v*` |
+| qBittorrent | `qbittorrent` | 58085（WebUI）/ 58080（BT） | `admin` / `adminadmin` | `qbittorrent-v*` |
 
 产物与发布见 [Releases](https://github.com/tardlk/Fpk/releases)。
+
+> qBittorrent 的 WebUI 端口为 `58085`，BT 监听（上传/下载）端口为 `58080`。BT 端口如需外网使用，请在路由器/防火墙自行放行或映射。
 
 ## 目录结构
 
