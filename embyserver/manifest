@@ -1,0 +1,13 @@
+appname               = embyserver
+version               = 4.10.0.40
+display_name          = Emby
+desc                  = Emby 是一款开源的媒体服务器，可在多种设备上管理和串流你的影音资料库。
+platform              = x86
+source                = thirdparty
+maintainer            = Emby LLC
+maintainer_url        = https://emby.media
+desktop_uidir         = ui
+desktop_applaunchname = embyserver.Application
+service_port          = 8096
+checkport             = true
+ctl_stop              = true

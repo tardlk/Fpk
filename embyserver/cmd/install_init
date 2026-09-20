@@ -1,0 +1,6 @@
+#!/bin/bash
+
+# Runs before the application files are installed.
+# Nothing to prepare here: Emby writes all runtime state under TRIM_PKGVAR.
+
+exit 0

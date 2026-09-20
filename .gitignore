@@ -1,0 +1,14 @@
+# Official fnpack tool, fetched by scripts/fetch-fnpack.sh
+/fnpack
+
+# Build workspace and outputs
+/build/
+/dist/
+
+# Assembled application payload inside the fnpack project.
+# It is rebuilt from the upstream Emby .deb plus the src/app overlay by
+# scripts/build.sh and must not be committed.
+/embyserver/app/
+
+*.deb
+*.fpk

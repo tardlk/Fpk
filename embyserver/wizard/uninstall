@@ -1,0 +1,27 @@
+[
+  {
+    "stepTitle": "卸载 Emby",
+    "items": [
+      {
+        "type": "tips",
+        "helpText": "选择是否保留 Emby 的配置、元数据和用户数据。"
+      },
+      {
+        "type": "radio",
+        "field": "wizard_delete_data",
+        "label": "卸载时如何处理 Emby 数据？",
+        "initValue": "false",
+        "options": [
+          {
+            "label": "保留现有数据（推荐，便于以后重新安装）",
+            "value": "false"
+          },
+          {
+            "label": "删除所有 Emby 数据（不可恢复）",
+            "value": "true"
+          }
+        ]
+      }
+    ]
+  }
+]

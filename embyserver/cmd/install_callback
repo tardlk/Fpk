@@ -1,0 +1,7 @@
+#!/bin/bash
+
+# Runs after the application files are installed.
+
+mkdir -p "${TRIM_PKGVAR}/cache" "${TRIM_PKGVAR}/config" "${TRIM_PKGVAR}/logs" 2>/dev/null || true
+
+exit 0

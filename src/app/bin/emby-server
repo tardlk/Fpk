@@ -1,0 +1,52 @@
+#!/bin/sh
+#
+# fnOS launcher for Emby Server.
+#
+# Based on the upstream /opt/emby-server/bin/emby-server script, adapted to
+# fnOS paths. All paths are taken from the fnOS runtime environment:
+#   TRIM_APPDEST         - installed application files (the "target" dir)
+#   TRIM_PKGVAR          - persistent runtime data
+#   TRIM_DATA_SHARE_PATHS - declared data-share directories (colon separated)
+#
+# The self-update flag of the upstream launcher is intentionally omitted:
+# application updates are managed by the fnOS App Center.
+
+set -e
+
+APP_DIR="${TRIM_APPDEST:-/var/apps/embyserver/target}"
+APP_DATA_DIR="${TRIM_PKGVAR:-${APP_DIR}/var}"
+
+SHARE_DIR="${TRIM_DATA_SHARE_PATHS%%:*}"
+if [ -z "${SHARE_DIR}" ] || [ ! -d "${SHARE_DIR}" ]; then
+    SHARE_DIR="${APP_DATA_DIR}"
+fi
+
+export AMDGPU_IDS_PATH="${APP_DIR}/share/libdrm/amdgpu.ids"
+export EMBY_DATA="${APP_DATA_DIR}"
+export FONTCONFIG_PATH="${APP_DIR}/etc/fonts"
+export LD_LIBRARY_PATH="${APP_DIR}/lib"
+export LIBVA_DRIVERS_PATH="${APP_DIR}/lib/dri"
+export OCL_ICD_VENDORS="${APP_DIR}/etc/OpenCL/vendors"
+export PATH="${APP_DIR}/bin:${PATH}"
+export PCI_IDS_PATH="${APP_DIR}/share/hwdata/pci.ids"
+export SSL_CERT_FILE="${APP_DIR}/etc/ssl/certs/ca-certificates.crt"
+export VK_DRIVER_FILES="${APP_DIR}/share/vulkan/icd.d"
+export VK_LAYER_PATH="${APP_DIR}/share/vulkan/explicit_layer.d"
+export VK_IMPLICIT_LAYER_PATH="${APP_DIR}/share/vulkan/implicit_layer.d"
+export XDG_CACHE_HOME="${EMBY_DATA}/cache"
+
+# Workaround for Intel drivers on kernel 6.8 and above.
+export NEOReadDebugKeys=1
+export OverrideGpuAddressSpace=48
+
+cd "${APP_DIR}" || exit 1
+
+exec "${APP_DIR}/system/EmbyServer" \
+    -programdata "${APP_DATA_DIR}" \
+    -ffdetect "${APP_DIR}/bin/ffdetect" \
+    -ffmpeg "${APP_DIR}/bin/ffmpeg" \
+    -ffprobe "${APP_DIR}/bin/ffprobe" \
+    -restartexitcode 3 \
+    -nolocalportconfig \
+    -ignore_vaapi_enabled_flag \
+    -defaultdirectory "${SHARE_DIR}"

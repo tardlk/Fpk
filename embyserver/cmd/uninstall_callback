@@ -1,0 +1,16 @@
+#!/bin/bash
+
+# Runs after uninstall cleanup.
+# wizard/uninstall exposes wizard_delete_data so users can choose
+# whether their Emby configuration and metadata are removed.
+
+if [ "${wizard_delete_data}" = "true" ]; then
+    if [ -n "${TRIM_PKGVAR}" ] && [ -d "${TRIM_PKGVAR}" ]; then
+        rm -rf "${TRIM_PKGVAR:?}/"* "${TRIM_PKGVAR:?}/".[!.]* 2>/dev/null || true
+    fi
+    if [ -n "${TRIM_PKGHOME}" ] && [ -d "${TRIM_PKGHOME}" ]; then
+        rm -rf "${TRIM_PKGHOME:?}/"* "${TRIM_PKGHOME:?}/".[!.]* 2>/dev/null || true
+    fi
+fi
+
+exit 0

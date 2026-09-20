@@ -1,0 +1,5 @@
+#!/bin/bash
+
+# Runs after an upgrade. Runtime data under TRIM_PKGVAR is kept as-is.
+
+exit 0

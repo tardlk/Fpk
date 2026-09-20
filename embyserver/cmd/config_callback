@@ -1,0 +1,6 @@
+#!/bin/bash
+
+# Runs after configuration changes are applied.
+# The current version has no configuration form, so there is nothing to do.
+
+exit 0
