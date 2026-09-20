@@ -5,6 +5,8 @@
 本项目不依赖任何第三方打包脚本或自定义 FPK 格式，完全遵循官方开发文档：
 <https://developer.fnnas.com/docs/quick-started/create-application/>
 
+> 打包过程中积累的经验、坑点与排查方法见 [`docs/fnos-packaging-notes.md`](docs/fnos-packaging-notes.md)（含“fnOS 不托管进程”“媒体路径权限”等）。
+
 ## 打包逻辑
 
 ```
