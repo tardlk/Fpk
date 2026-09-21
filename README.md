@@ -78,3 +78,8 @@ Emby 以专用应用用户运行，fnOS 卷目录（`/vol1` 等）对应用用�
 | `build-qbittorrent.yml` | qBittorrent | 手动 / push（`qbittorrent/`、`src/qbittorrent/`、`scripts/`）/ 每天 20:30 UTC |
 
 流程：下载官方 fnpack → 下载并校验上游产物 → 组装 → `fnpack build` → `verify-fpk.sh` 校验 → 发布到 Release（含工作流产物与固定标签）。
+
+## 开发与交接
+
+- [`AGENTS.md`](AGENTS.md)：给 AI/开发者的仓库契约与铁律（官方方式、按架构拆包、供应链校验、发布规则）。
+- [`docs/fpk-handoff.md`](docs/fpk-handoff.md)：完整交接文档（结构、各应用配置、构建流程、CI 发布、新增应用 recipe、排错手册、验证方法、已知限制）。
